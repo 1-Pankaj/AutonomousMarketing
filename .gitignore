@@ -37,19 +37,24 @@ screenshots/
 *.key
 *.cert
 
-# Private / Internal Spreadsheets & Data Exports
-*.xlsx
-*.xls
+# Private CRM Data & Leads (Local-First Offline Storage)
+leads/leads.json
+public/leads/leads.json
 leads/*.xlsx
 leads/*.xls
 leads/backup_*.csv
 leads/*.csv
+leads/sprint.json
+leads/settings.json
+leads/posts.json
+leads/intents.json
 
 # AI Tooling & Local Assistant Caches
 .claude/
 agent/
 graphify-out/
 figma-plugin/
+.archify/
 
 # External / Sibling Directories in Workspace
 1-pankaj.github.io/

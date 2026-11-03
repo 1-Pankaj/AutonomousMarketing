@@ -128,7 +128,7 @@ Every interactive element incorporates Apple-grade fluid physical motion:
 - **Publish Action**: Tactile `Publish Now` controls that move posts from staged to published with instant toast notification.
 
 ### 03. Lead Radar & CRM
-- **Pipeline Metric Cards**: 4 summary cards (`Scanned Pipeline (2,174 Targets)`, `Critical Gaps (32 Urgent)`, `Modernization Candidates (45 Qualified)`, `Healthy Systems (64 Monitored)`).
+- **Pipeline Metric Cards**: 4 summary cards (`Scanned Pipeline (Targets)`, `Critical Gaps (Urgent)`, `Modernization Candidates (Qualified)`, `Healthy Systems (Monitored)`).
 - **Interactive Filter Tabs**: Filter between All, Critical Gaps, Modernization Opportunities, and Healthy Systems.
 - **CRM Table**: Clear column headers (`TARGET / DOMAIN`, `DIGITAL HEALTH`, `DETECTED GAP / ISSUE`, `ACTION`).
 - **Digital Health Meters**: Fixed-width `96px` (`w-24`) smooth rounded progress tracks paired with numerical score pills (`32 Critical`). Zero clipping.

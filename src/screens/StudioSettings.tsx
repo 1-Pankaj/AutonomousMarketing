@@ -1,9 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Database, Sliders, Bell, Shield, Save, User, Volume2, Globe, Sun, Moon, Check } from 'lucide-react';
+import {
+  Database,
+  Sliders,
+  Bell,
+  Shield,
+  Save,
+  User,
+  Volume2,
+  Globe,
+  Sun,
+  Moon,
+  Check,
+  Cpu,
+  Terminal,
+  Copy,
+  Key,
+  Activity,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
+import { useStudio } from '../context/StudioContext';
+import { AI_PROVIDERS, AIProviderId, aiClient } from '../services/aiClient';
 
 interface StudioSettingsProps {
-  onShowToast: (title: string, message: string, type: 'success' | 'info') => void;
+  onShowToast: (title: string, message: string, type: 'success' | 'info' | 'error') => void;
   founderName?: string;
   onUpdateFounderName?: (name: string) => void;
   theme?: 'dark' | 'light';
@@ -12,33 +33,119 @@ interface StudioSettingsProps {
 
 export const StudioSettings: React.FC<StudioSettingsProps> = ({
   onShowToast,
-  founderName = 'Alex Vance',
+  founderName: propFounderName,
   onUpdateFounderName,
-  theme = 'dark',
+  theme: propTheme,
   onSetTheme,
 }) => {
-  const [name, setName] = useState(founderName);
-  const [specialty, setSpecialty] = useState('Full-Stack Web Optimization Specialist');
-  const [toneStrictness, setToneStrictness] = useState<number>(95);
-  const [intentThreshold, setIntentThreshold] = useState<number>(85);
-  const [sprintTime, setSprintTime] = useState<string>('09:00');
-  const [autoSprint, setAutoSprint] = useState<boolean>(true);
-  const [desktopNotifs, setDesktopNotifs] = useState<boolean>(true);
-  const [soundAlerts, setSoundAlerts] = useState<boolean>(true);
+  const { settings, updateSettings, theme: ctxTheme, setTheme: ctxSetTheme } = useStudio();
+
+  const currentTheme = propTheme || ctxTheme;
+  const handleSetTheme = onSetTheme || ctxSetTheme;
+
+  const [name, setName] = useState(settings.founderName || propFounderName || 'Alex Vance');
+  const [specialty, setSpecialty] = useState(settings.specialtyTitle || 'Full-Stack Web Optimization Specialist');
+  const [toneStrictness, setToneStrictness] = useState<number>(settings.writingStyle || 95);
+  const [intentThreshold, setIntentThreshold] = useState<number>(settings.matchingThreshold || 85);
+  const [sprintTime, setSprintTime] = useState<string>(settings.morningRoutineTime || '09:00');
+  const [autoSprint, setAutoSprint] = useState<boolean>(settings.dailyRoutineEnabled ?? true);
+  const [desktopNotifs, setDesktopNotifs] = useState<boolean>(settings.desktopNotifications ?? true);
+  const [soundAlerts, setSoundAlerts] = useState<boolean>(settings.soundAlerts ?? true);
   const [dailyReminder, setDailyReminder] = useState<boolean>(true);
+
+  // AI & Agent Connections State
+  const [aiProvider, setAiProvider] = useState<AIProviderId>(settings.aiProvider || 'antigravity');
+  const [aiEndpoint, setAiEndpoint] = useState<string>(settings.aiEndpoint || 'https://generativelanguage.googleapis.com');
+  const [aiModel, setAiModel] = useState<string>(settings.aiModel || 'gemini-2.5-pro');
+  const [aiApiKey, setAiApiKey] = useState<string>(settings.aiApiKey || '');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isTestingAi, setIsTestingAi] = useState(false);
+  const [aiTestResult, setAiTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [activeMcpClient, setActiveMcpClient] = useState<'claude' | 'cursor' | 'antigravity' | 'openclaw'>('claude');
+  const [hasCopiedMcp, setHasCopiedMcp] = useState(false);
+
+  useEffect(() => {
+    if (settings.founderName) setName(settings.founderName);
+    if (settings.specialtyTitle) setSpecialty(settings.specialtyTitle);
+    if (settings.writingStyle) setToneStrictness(settings.writingStyle);
+    if (settings.matchingThreshold) setIntentThreshold(settings.matchingThreshold);
+    if (settings.morningRoutineTime) setSprintTime(settings.morningRoutineTime);
+    if (settings.dailyRoutineEnabled !== undefined) setAutoSprint(settings.dailyRoutineEnabled);
+    if (settings.desktopNotifications !== undefined) setDesktopNotifs(settings.desktopNotifications);
+    if (settings.soundAlerts !== undefined) setSoundAlerts(settings.soundAlerts);
+    if (settings.aiProvider) setAiProvider(settings.aiProvider);
+    if (settings.aiEndpoint) setAiEndpoint(settings.aiEndpoint);
+    if (settings.aiModel) setAiModel(settings.aiModel);
+    if (settings.aiApiKey) setAiApiKey(settings.aiApiKey);
+  }, [settings]);
+
+  // Update default endpoint & model when provider switches
+  const handleSelectProvider = (providerId: AIProviderId) => {
+    setAiProvider(providerId);
+    setAiTestResult(null);
+    const meta = AI_PROVIDERS.find((p) => p.id === providerId);
+    if (meta) {
+      setAiEndpoint(meta.defaultEndpoint);
+      setAiModel(meta.defaultModel);
+    }
+  };
+
+  const handleTestAiConnection = async () => {
+    setIsTestingAi(true);
+    setAiTestResult(null);
+    try {
+      const result = await aiClient.testConnection(aiProvider, aiEndpoint, aiApiKey);
+      setAiTestResult(result);
+      if (result.success) {
+        onShowToast('AI Engine Connected', result.message, 'success');
+      } else {
+        onShowToast('Connection Alert', result.message, 'error');
+      }
+    } catch (e: any) {
+      setAiTestResult({ success: false, message: e?.message || 'Connection test failed.' });
+      onShowToast('Connection Error', 'Unable to reach provider endpoint.', 'error');
+    } finally {
+      setIsTestingAi(false);
+    }
+  };
+
+  const handleCopyMcp = () => {
+    const snippet = aiClient.getMcpConfigSnippet(activeMcpClient, process.cwd ? process.cwd() : '.');
+    try {
+      navigator.clipboard.writeText(snippet);
+      setHasCopiedMcp(true);
+      onShowToast('MCP Config Copied', `Configuration for ${activeMcpClient.toUpperCase()} copied to clipboard.`, 'success');
+      setTimeout(() => setHasCopiedMcp(false), 2600);
+    } catch {
+      onShowToast('Clipboard', 'Please copy configuration manually.', 'info');
+    }
+  };
 
   const [channels, setChannels] = useState({
     twitter: true,
     bluesky: true,
     github: true,
-    database: true
+    database: true,
   });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (onUpdateFounderName) {
       onUpdateFounderName(name);
     }
-    onShowToast('Settings Saved', 'Your preferences and daily routine have been updated.', 'success');
+    await updateSettings({
+      founderName: name,
+      specialtyTitle: specialty,
+      writingStyle: toneStrictness,
+      matchingThreshold: intentThreshold,
+      morningRoutineTime: sprintTime,
+      dailyRoutineEnabled: autoSprint,
+      desktopNotifications: desktopNotifs,
+      soundAlerts: soundAlerts,
+      aiProvider,
+      aiEndpoint,
+      aiModel,
+      aiApiKey,
+    });
   };
 
   const renderToggle = (checked: boolean, onChange: (val: boolean) => void) => (
@@ -60,6 +167,8 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
     </motion.button>
   );
 
+  const selectedProviderMeta = AI_PROVIDERS.find((p) => p.id === aiProvider) || AI_PROVIDERS[0];
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#18191D] p-6 text-white select-none">
       {/* Top Header */}
@@ -72,7 +181,7 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
             </span>
           </h1>
           <p className="text-xs text-[#9CA3AF] mt-0.5">
-            Configure your professional profile, connected accounts, writing style, and notification preferences.
+            Configure your professional profile, connected accounts, writing style, AI engines, and external MCP agents.
           </p>
         </div>
 
@@ -144,11 +253,11 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
-                onSetTheme?.('dark');
+                handleSetTheme?.('dark');
                 onShowToast('Dark Appearance Active', 'Obsidian dark theme enabled.', 'info');
               }}
               className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                theme === 'dark'
+                currentTheme === 'dark'
                   ? 'bg-[#18191D] border-[#D2F83D] shadow-lg shadow-[#D2F83D]/5 ring-1 ring-[#D2F83D]/30'
                   : 'bg-[#18191D]/60 border-[#2E313A] hover:border-[#3E424E]'
               }`}
@@ -163,7 +272,7 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
                     <div className="text-xs text-[#9CA3AF]">Obsidian Slate</div>
                   </div>
                 </div>
-                {theme === 'dark' && (
+                {currentTheme === 'dark' && (
                   <span className="w-5 h-5 rounded-full bg-[#D2F83D] text-[#18191D] flex items-center justify-center font-bold text-xs shadow-sm">
                     <Check className="w-3 h-3" />
                   </span>
@@ -181,11 +290,11 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
-                onSetTheme?.('light');
+                handleSetTheme?.('light');
                 onShowToast('Light Appearance Active', 'Silver clean light theme enabled.', 'info');
               }}
               className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                theme === 'light'
+                currentTheme === 'light'
                   ? 'bg-[#F3F4F6] border-[#3B66F5] shadow-lg shadow-[#3B66F5]/10 ring-1 ring-[#3B66F5]/30'
                   : 'bg-[#18191D]/60 border-[#2E313A] hover:border-[#3E424E]'
               }`}
@@ -200,7 +309,7 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
                     <div className="text-xs text-[#9CA3AF]">Silver Daylight</div>
                   </div>
                 </div>
-                {theme === 'light' && (
+                {currentTheme === 'light' && (
                   <span className="w-5 h-5 rounded-full bg-[#3B66F5] text-white flex items-center justify-center font-bold text-xs shadow-sm">
                     <Check className="w-3 h-3" />
                   </span>
@@ -215,7 +324,218 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
           </div>
         </div>
 
-        {/* 2. Notifications & Alerts (Apple Style) */}
+        {/* 3. AI Engine & External Agent Connections (New) */}
+        <div className="bg-[#202227] border border-[#2E313A] rounded-xl p-5 hover:border-[#3E424E] transition-colors">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-[#3B66F5]" />
+              <h3 className="text-sm font-bold text-white tracking-tight">AI Engine &amp; Agent Connections</h3>
+            </div>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#18191D] border border-[#2E313A] text-[#D2F83D] font-medium">
+              11 MCP Tools Active
+            </span>
+          </div>
+          <p className="text-xs text-[#9CA3AF] mb-4">
+            Select the active AI assistant for composing posts and proposals, or connect external coding agents via the Model Context Protocol.
+          </p>
+
+          {/* Provider Selection Grid */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {AI_PROVIDERS.map((provider) => {
+              const isSelected = aiProvider === provider.id;
+              return (
+                <motion.div
+                  key={provider.id}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+                  onClick={() => handleSelectProvider(provider.id)}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-[#18191D] border-[#3B66F5] shadow-md shadow-[#3B66F5]/10 ring-1 ring-[#3B66F5]/30'
+                      : 'bg-[#18191D]/70 border-[#2E313A] hover:border-[#3E424E]'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-white tracking-tight">{provider.name}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                        provider.isOffline
+                          ? 'bg-[#10B981]/15 text-[#34D399] border border-[#10B981]/30'
+                          : 'bg-[#3B66F5]/15 text-[#60A5FA] border border-[#3B66F5]/30'
+                      }`}>
+                        {provider.badge}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#9CA3AF] line-clamp-2 leading-relaxed">
+                      {provider.tagline}
+                    </p>
+                  </div>
+
+                  <div className="mt-3 pt-2 border-t border-[#2E313A]/60 flex items-center justify-between text-xs text-[#6B7280]">
+                    <span>{provider.defaultModel}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-[#3B66F5]" />}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Active Provider Configuration & Live Test */}
+          <div className="bg-[#18191D] border border-[#2E313A] rounded-xl p-4 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#2E313A] pb-3">
+              <div>
+                <div className="text-xs font-bold text-white flex items-center gap-2">
+                  <span>{selectedProviderMeta.name} Settings</span>
+                  <span className="text-xs text-[#9CA3AF] font-normal">
+                    ({selectedProviderMeta.isOffline ? 'Offline / Localhost' : 'Cloud API'})
+                  </span>
+                </div>
+                <div className="text-xs text-[#9CA3AF] mt-0.5">
+                  Configure the runtime endpoint and credentials for this assistant.
+                </div>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={isTestingAi}
+                onClick={handleTestAiConnection}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#252830] hover:bg-[#2E313A] border border-[#2E313A] rounded-lg text-xs font-semibold text-white transition-colors cursor-pointer"
+              >
+                <Activity className={`w-3.5 h-3.5 ${isTestingAi ? 'animate-spin text-[#D2F83D]' : 'text-[#60A5FA]'}`} />
+                <span>{isTestingAi ? 'Testing...' : 'Test Connection'}</span>
+              </motion.button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#8A8F9E] mb-1">
+                  Model Identifier
+                </label>
+                <input
+                  type="text"
+                  value={aiModel}
+                  onChange={(e) => setAiModel(e.target.value)}
+                  className="w-full bg-[#202227] border border-[#2E313A] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#6B7280] focus:outline-none focus:border-[#3B66F5]"
+                  placeholder="e.g. llama3.2, claude-3-7-sonnet"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#8A8F9E] mb-1">
+                  Endpoint URL
+                </label>
+                <input
+                  type="text"
+                  value={aiEndpoint}
+                  onChange={(e) => setAiEndpoint(e.target.value)}
+                  className="w-full bg-[#202227] border border-[#2E313A] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#6B7280] focus:outline-none focus:border-[#3B66F5]"
+                  placeholder="e.g. http://localhost:11434"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-[#8A8F9E]">
+                    API Key {selectedProviderMeta.requiresKey ? '' : '(Optional)'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    className="text-xs text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
+                  >
+                    {showApiKey ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showApiKey ? 'text' : 'password'}
+                    value={aiApiKey}
+                    onChange={(e) => setAiApiKey(e.target.value)}
+                    className="w-full bg-[#202227] border border-[#2E313A] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#6B7280] focus:outline-none focus:border-[#3B66F5]"
+                    placeholder={selectedProviderMeta.requiresKey ? 'sk-...' : 'Local engine (no key needed)'}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {aiTestResult && (
+              <div className={`p-3 rounded-lg border text-xs flex items-center gap-2.5 ${
+                aiTestResult.success
+                  ? 'bg-[#10B981]/10 border-[#10B981]/30 text-[#34D399]'
+                  : 'bg-[#EF4444]/10 border-[#EF4444]/30 text-[#F87171]'
+              }`}>
+                {aiTestResult.success ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                )}
+                <span>{aiTestResult.message}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Model Context Protocol (MCP) Bridge Section */}
+          <div className="mt-5 pt-4 border-t border-[#2E313A]">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-[#D2F83D]" />
+                  <span>Model Context Protocol (MCP) Server Setup</span>
+                </h4>
+                <p className="text-xs text-[#9CA3AF] mt-0.5">
+                  Allows external agents (Claude Desktop, Cursor, Google Antigravity, OpenClaw) to query leads, read audits, and schedule posts.
+                </p>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleCopyMcp}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D2F83D] hover:bg-[#C2E82D] text-[#18191D] rounded-lg text-xs font-bold transition-colors shadow-sm cursor-pointer"
+              >
+                {hasCopiedMcp ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{hasCopiedMcp ? 'Config Copied' : 'Copy MCP Config'}</span>
+              </motion.button>
+            </div>
+
+            {/* Client Tabs */}
+            <div className="flex items-center gap-2 mb-2">
+              {(['claude', 'cursor', 'antigravity', 'openclaw'] as const).map((client) => {
+                const isActive = activeMcpClient === client;
+                const labels = {
+                  claude: 'Claude Desktop',
+                  cursor: 'Cursor IDE',
+                  antigravity: 'Google Antigravity',
+                  openclaw: 'OpenClaw / OpenCode',
+                };
+                return (
+                  <button
+                    key={client}
+                    onClick={() => setActiveMcpClient(client)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                      isActive
+                        ? 'bg-[#252830] text-white border border-[#3E424E] font-semibold'
+                        : 'text-[#9CA3AF] hover:text-white'
+                    }`}
+                  >
+                    {labels[client]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Snippet Display */}
+            <div className="bg-[#18191D] border border-[#2E313A] rounded-xl p-3 font-mono text-xs text-[#D1D5DB] overflow-x-auto">
+              <pre className="whitespace-pre">
+                {aiClient.getMcpConfigSnippet(activeMcpClient, typeof window !== 'undefined' ? window.location?.origin || '.' : '.')}
+              </pre>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. Notifications & Alerts (Apple Style) */}
         <div className="bg-[#202227] border border-[#2E313A] rounded-xl p-5 hover:border-[#3E424E] transition-colors">
           <div className="flex items-center gap-2 mb-1">
             <Bell className="w-4 h-4 text-[#D2F83D]" />
@@ -261,7 +581,7 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
           </div>
         </div>
 
-        {/* 3. Daily Morning Routine */}
+        {/* 5. Daily Morning Routine */}
         <div className="bg-[#202227] border border-[#2E313A] rounded-xl p-5 hover:border-[#3E424E] transition-colors">
           <div className="flex items-center gap-2 mb-1">
             <Shield className="w-4 h-4 text-[#34D399]" />
@@ -294,7 +614,7 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
           </div>
         </div>
 
-        {/* 4. Writing Voice & Style */}
+        {/* 6. Writing Voice & Style */}
         <div className="bg-[#202227] border border-[#2E313A] rounded-xl p-5 hover:border-[#3E424E] transition-colors">
           <div className="flex items-center gap-2 mb-1">
             <Sliders className="w-4 h-4 text-[#D2F83D]" />
@@ -359,7 +679,7 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
           </div>
         </div>
 
-        {/* 5. Connected Accounts */}
+        {/* 7. Connected Accounts */}
         <div className="bg-[#202227] border border-[#2E313A] rounded-xl p-5 hover:border-[#3E424E] transition-colors">
           <h3 className="text-sm font-bold text-white mb-1 tracking-tight">Connected Accounts</h3>
           <p className="text-xs text-[#9CA3AF] mb-4">
@@ -402,16 +722,14 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#202227] border border-[#2E313A] flex items-center justify-center">
-                    <svg className="w-4 h-4 fill-[#3B66F5]" viewBox="0 0 24 24">
-                      <path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.382 5.65 1.04 7.625.658 1.975 2.586 3.12 4.417 3.12 1.83 0 2.87-.665 4.543-2.713 1.672 2.048 2.713 2.713 4.543 2.713 1.83 0 3.759-1.145 4.417-3.12.658-1.975 1.04-6.935 1.04-7.625 0-.688-.139-1.86-.902-2.203-.659-.299-1.664-.621-4.3 1.24C16.046 4.747 13.087 8.686 12 10.8z" />
-                    </svg>
+                  <div className="w-8 h-8 rounded-lg bg-[#202227] border border-[#2E313A] flex items-center justify-center text-[#3B66F5]">
+                    <Globe className="w-4 h-4" />
                   </div>
                   <span className="text-xs text-[#34D399] font-medium bg-[#10B981]/10 px-2.5 py-0.5 rounded-full">
                     Connected
                   </span>
                 </div>
-                <div className="text-sm font-bold text-white tracking-tight">Bluesky Social</div>
+                <div className="text-sm font-bold text-white tracking-tight">Bluesky</div>
                 <div className="text-xs text-[#9CA3AF] mt-0.5">alex.bsky.social</div>
               </div>
 
@@ -460,7 +778,7 @@ export const StudioSettings: React.FC<StudioSettingsProps> = ({
                     <Database className="w-4 h-4" />
                   </div>
                   <span className="text-xs text-[#34D399] font-medium bg-[#10B981]/10 px-2.5 py-0.5 rounded-full">
-                    2,174 Contacts
+                    111 Contacts
                   </span>
                 </div>
                 <div className="text-sm font-bold text-white tracking-tight">Local Business Contacts</div>

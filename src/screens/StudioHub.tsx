@@ -5,6 +5,7 @@ import { ScheduleCalendar } from '../components/ScheduleCalendar';
 import { FocusGauge } from '../components/FocusGauge';
 import { ClientGoalBar } from '../components/ClientGoalBar';
 import { Search, Plus, ArrowUpRight, MessageSquare, Send, FileText, X } from 'lucide-react';
+import { useStudio } from '../context/StudioContext';
 
 interface StudioHubProps {
   onOpenNewPost: () => void;
@@ -17,15 +18,20 @@ export const StudioHub: React.FC<StudioHubProps> = ({
   onOpenSprint,
   onOpenAudit,
 }) => {
+  const { settings, posts } = useStudio();
   const [activeFilter, setActiveFilter] = useState<'all' | 'social' | 'outreach'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const firstPost = posts[0];
+  const secondPost = posts[1];
+  const thirdPost = posts[2];
 
   const campaigns = [
     {
       id: 'c1',
-      title: 'Public Thread',
-      time: '7:00 AM Today • 3 parts',
-      channel: 'Bluesky & X',
+      title: firstPost?.title?.slice(0, 24) || 'Public Thread',
+      time: firstPost?.scheduledTime ? `${firstPost.scheduledTime} • ${firstPost.parts || '3 parts'}` : '7:00 AM Today • 3 parts',
+      channel: firstPost?.channel || 'Bluesky & X',
       type: 'social' as const,
       icon: MessageSquare,
       isPrimary: true,
@@ -33,9 +39,9 @@ export const StudioHub: React.FC<StudioHubProps> = ({
     },
     {
       id: 'c2',
-      title: 'Clinic Follow-up',
-      time: '2:30 PM Today • Dr. Elena',
-      channel: 'Outreach',
+      title: secondPost?.title?.slice(0, 24) || 'Clinic Follow-up',
+      time: secondPost?.scheduledTime ? `${secondPost.scheduledTime} • ${secondPost.category || 'Outreach'}` : '2:30 PM Today • Dr. Elena',
+      channel: secondPost?.channel || 'Outreach',
       type: 'outreach' as const,
       icon: Send,
       isPrimary: false,
@@ -44,9 +50,9 @@ export const StudioHub: React.FC<StudioHubProps> = ({
     },
     {
       id: 'c3',
-      title: 'Dev Story Blog',
-      time: '5:00 PM Today • Next.js',
-      channel: 'Dev Blog',
+      title: thirdPost?.title?.slice(0, 24) || 'Dev Story Blog',
+      time: thirdPost?.scheduledTime ? `${thirdPost.scheduledTime} • ${thirdPost.category || 'Story'}` : '5:00 PM Today • Next.js',
+      channel: thirdPost?.channel || 'Dev Blog',
       type: 'social' as const,
       icon: FileText,
       isPrimary: false,
@@ -76,7 +82,7 @@ export const StudioHub: React.FC<StudioHubProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
-            Hello, Alex!
+            {`Hello, ${settings.founderName ? settings.founderName.split(' ')[0] : 'Alex'}!`}
           </h1>
           <p className="text-sm text-[#8A8F9E] mt-0.5">
             Here is your marketing and client overview for today.

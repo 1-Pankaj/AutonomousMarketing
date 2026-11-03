@@ -1,113 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Target, Search, ArrowUpRight, ShieldAlert, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Target, Search, ArrowUpRight, ShieldAlert, AlertTriangle, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Lead } from '../types';
+import { useStudio } from '../context/StudioContext';
 
 interface LeadRadarProps {
-  onOpenAudit: (lead: Lead) => void;
-  onOpenProposal: (lead: Lead) => void;
+  onOpenAudit?: (lead: Lead) => void;
+  onOpenProposal?: (lead: Lead) => void;
 }
 
-const DEFAULT_LEADS: Lead[] = [
-  {
-    id: 'lead-1',
-    name: 'Apex Health Diagnostics',
-    domain: 'apexhealth.io',
-    category: 'Healthcare Clinic',
-    healthScore: 32,
-    healthStatus: 'Critical',
-    vulnerability: 'Slow 4.2s mobile load time, booking calendar drop-offs',
-    monthlyVisitors: '18.4K',
-    opportunityValue: '$9,500'
-  },
-  {
-    id: 'lead-2',
-    name: 'Lumina Skin & Aesthetics',
-    domain: 'luminaskin.co',
-    category: 'D2C E-commerce',
-    healthScore: 45,
-    healthStatus: 'Moderate',
-    vulnerability: 'Google search indexing blocked, high cart abandonment',
-    monthlyVisitors: '42.1K',
-    opportunityValue: '$12,000'
-  },
-  {
-    id: 'lead-3',
-    name: 'MedFlow Orthopedics',
-    domain: 'medflowortho.com',
-    category: 'Healthcare',
-    healthScore: 28,
-    healthStatus: 'Critical',
-    vulnerability: 'Unencrypted patient form, outdated insecure WordPress plugin',
-    monthlyVisitors: '9.8K',
-    opportunityValue: '$14,500'
-  },
-  {
-    id: 'lead-4',
-    name: 'Veloce Coffee Roasters',
-    domain: 'velocecoffee.shop',
-    category: 'E-Commerce',
-    healthScore: 58,
-    healthStatus: 'Fair',
-    vulnerability: 'Heavy uncompressed images (14MB), sluggish mobile checkout',
-    monthlyVisitors: '31.2K',
-    opportunityValue: '$7,200'
-  },
-  {
-    id: 'lead-5',
-    name: 'CloudScale Micro-SaaS',
-    domain: 'cloudscale.dev',
-    category: 'Dev Tools',
-    healthScore: 64,
-    healthStatus: 'Healthy',
-    vulnerability: 'Missing search docs, high drop-off on pricing tier selector',
-    monthlyVisitors: '65.0K',
-    opportunityValue: '$11,000'
-  },
-  {
-    id: 'lead-6',
-    name: 'Jodhpur City Hospital & Research Centre',
-    domain: 'jodhpurcityhospital.org',
-    category: 'Regional Healthcare',
-    healthScore: 29,
-    healthStatus: 'Critical',
-    vulnerability: 'No mobile appointment booking, 5.1s load delay on phones',
-    monthlyVisitors: '24.5K',
-    opportunityValue: '$15,000'
-  },
-  {
-    id: 'lead-7',
-    name: 'Desert Pulse Diagnostic Lab',
-    domain: 'desertpulselab.in',
-    category: 'Diagnostics',
-    healthScore: 41,
-    healthStatus: 'Moderate',
-    vulnerability: 'Manual test report distribution, insecure patient login portal',
-    monthlyVisitors: '12.8K',
-    opportunityValue: '$8,000'
-  }
-];
+export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit: propOpenAudit, onOpenProposal: propOpenProposal }) => {
+  const { leads, pipelineStats, openAudit: ctxOpenAudit, openProposal: ctxOpenProposal, isLoadingLeads } = useStudio();
 
-export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposal }) => {
+  const handleOpenAudit = propOpenAudit || ctxOpenAudit;
+  const handleOpenProposal = propOpenProposal || ctxOpenProposal;
+
   const [filter, setFilter] = useState<'All' | 'Critical' | 'Moderate' | 'Healthy'>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [leads] = useState<Lead[]>(DEFAULT_LEADS);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
 
-  const filteredLeads = leads.filter(lead => {
-    const matchesFilter =
-      filter === 'All' ? true :
-      filter === 'Critical' ? lead.healthStatus === 'Critical' :
-      filter === 'Moderate' ? (lead.healthStatus === 'Moderate' || lead.healthStatus === 'Fair') :
-      lead.healthStatus === 'Healthy';
+  // Filter leads based on tab and search query
+  const filteredLeads = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return leads.filter(lead => {
+      const matchesFilter =
+        filter === 'All' ? true :
+        filter === 'Critical' ? lead.healthStatus === 'Critical' :
+        filter === 'Moderate' ? (lead.healthStatus === 'Moderate' || lead.healthStatus === 'Fair') :
+        lead.healthStatus === 'Healthy';
 
-    const matchesSearch =
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.domain.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.vulnerability.toLowerCase().includes(searchQuery.toLowerCase());
+      if (!matchesFilter) return false;
+      if (!q) return true;
 
-    return matchesFilter && matchesSearch;
-  });
+      return (
+        lead.name.toLowerCase().includes(q) ||
+        lead.domain.toLowerCase().includes(q) ||
+        lead.category.toLowerCase().includes(q) ||
+        lead.vulnerability.toLowerCase().includes(q) ||
+        (lead.city && lead.city.toLowerCase().includes(q))
+      );
+    });
+  }, [leads, filter, searchQuery]);
+
+  // Reset to page 1 when filter or search changes
+  const handleFilterChange = (newFilter: 'All' | 'Critical' | 'Moderate' | 'Healthy') => {
+    setFilter(newFilter);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  // Pagination calculation
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
+  const currentSafePage = Math.min(currentPage, totalPages);
+  const startIndex = (currentSafePage - 1) * pageSize;
+  const paginatedLeads = useMemo(() => {
+    return filteredLeads.slice(startIndex, startIndex + pageSize);
+  }, [filteredLeads, startIndex, pageSize]);
 
   const getBadgeStyle = (status: Lead['healthStatus']) => {
     switch (status) {
@@ -171,7 +124,7 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
               type="text"
               placeholder="Search domain, name, or flaw..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-8 pr-3 py-1.5 bg-[#202227] border border-[#2E313A] rounded-lg text-xs text-white placeholder-[#6B7280] focus:outline-none focus:border-[#D2F83D] focus:ring-1 focus:ring-[#D2F83D]/20 w-64 transition-all"
             />
           </div>
@@ -179,8 +132,11 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-            onClick={() => onOpenProposal(DEFAULT_LEADS[0])}
-            className="flex items-center gap-2 px-3.5 py-1.5 bg-[#3B66F5] hover:bg-[#2F52C4] text-white rounded-lg text-xs font-semibold tracking-wide transition-colors shadow-sm"
+            onClick={() => {
+              const target = paginatedLeads[0] || leads[0];
+              if (target) handleOpenProposal(target);
+            }}
+            className="flex items-center gap-2 px-3.5 py-1.5 bg-[#3B66F5] hover:bg-[#2F52C4] text-white rounded-lg text-xs font-semibold tracking-wide transition-colors shadow-sm cursor-pointer"
           >
             <span>Send Client Proposal</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -197,7 +153,9 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
         >
           <div>
             <div className="text-xs text-[#9CA3AF] uppercase tracking-wider font-semibold">Scanned Pipeline</div>
-            <div className="text-xl font-bold text-white mt-1">2,174 <span className="text-xs font-normal text-[#6B7280]">Targets</span></div>
+            <div className="text-xl font-bold text-white mt-1">
+              {pipelineStats.total.toLocaleString()} <span className="text-xs font-normal text-[#6B7280]">Targets</span>
+            </div>
           </div>
           <div className="w-9 h-9 rounded-lg bg-[#18191D] border border-[#2E313A] flex items-center justify-center text-[#D2F83D]">
             <Target className="w-4 h-4" />
@@ -211,7 +169,9 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
         >
           <div>
             <div className="text-xs text-[#9CA3AF] uppercase tracking-wider font-semibold">Critical Gaps</div>
-            <div className="text-xl font-bold text-[#F87171] mt-1">32 <span className="text-xs font-normal text-[#6B7280]">Urgent</span></div>
+            <div className="text-xl font-bold text-[#F87171] mt-1">
+              {pipelineStats.critical.toLocaleString()} <span className="text-xs font-normal text-[#6B7280]">Urgent</span>
+            </div>
           </div>
           <div className="w-9 h-9 rounded-lg bg-[#2A1618] border border-[#7F1D1D]/40 flex items-center justify-center text-[#F87171]">
             <ShieldAlert className="w-4 h-4" />
@@ -225,7 +185,9 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
         >
           <div>
             <div className="text-xs text-[#9CA3AF] uppercase tracking-wider font-semibold">Modernization Candidates</div>
-            <div className="text-xl font-bold text-[#FBBF24] mt-1">45 <span className="text-xs font-normal text-[#6B7280]">Qualified</span></div>
+            <div className="text-xl font-bold text-[#FBBF24] mt-1">
+              {pipelineStats.moderate.toLocaleString()} <span className="text-xs font-normal text-[#6B7280]">Qualified</span>
+            </div>
           </div>
           <div className="w-9 h-9 rounded-lg bg-[#2B2114] border border-[#78350F]/40 flex items-center justify-center text-[#FBBF24]">
             <AlertTriangle className="w-4 h-4" />
@@ -239,7 +201,9 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
         >
           <div>
             <div className="text-xs text-[#9CA3AF] uppercase tracking-wider font-semibold">Healthy Systems</div>
-            <div className="text-xl font-bold text-[#60A5FA] mt-1">64 <span className="text-xs font-normal text-[#6B7280]">Monitored</span></div>
+            <div className="text-xl font-bold text-[#60A5FA] mt-1">
+              {pipelineStats.healthy.toLocaleString()} <span className="text-xs font-normal text-[#6B7280]">Monitored</span>
+            </div>
           </div>
           <div className="w-9 h-9 rounded-lg bg-[#13233A] border border-[#1E3A8A]/40 flex items-center justify-center text-[#60A5FA]">
             <CheckCircle className="w-4 h-4" />
@@ -252,17 +216,17 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
         {(['All', 'Critical', 'Moderate', 'Healthy'] as const).map((tab) => {
           const isActive = filter === tab;
           const label =
-            tab === 'All' ? 'All Targets (141)' :
-            tab === 'Critical' ? 'Critical Gaps (32)' :
-            tab === 'Moderate' ? 'Modernization Opportunities (45)' :
-            'Healthy Systems (64)';
+            tab === 'All' ? `All Targets (${pipelineStats.total.toLocaleString()})` :
+            tab === 'Critical' ? `Critical Gaps (${pipelineStats.critical.toLocaleString()})` :
+            tab === 'Moderate' ? `Modernization Opportunities (${pipelineStats.moderate.toLocaleString()})` :
+            `Healthy Systems (${pipelineStats.healthy.toLocaleString()})`;
 
           return (
             <motion.button
               key={tab}
               whileTap={{ scale: 0.96 }}
-              onClick={() => setFilter(tab)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              onClick={() => handleFilterChange(tab)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                 isActive
                   ? 'bg-[#D2F83D] text-[#18191D] font-semibold shadow-sm'
                   : 'bg-[#202227] text-[#9CA3AF] hover:text-white border border-[#2E313A]'
@@ -286,7 +250,7 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
 
         {/* Table Rows (Scrollable) */}
         <div className="flex-1 overflow-y-auto divide-y divide-[#2E313A]/60">
-          {filteredLeads.map((lead) => {
+          {paginatedLeads.map((lead) => {
             const style = getBadgeStyle(lead.healthStatus);
             return (
               <motion.div
@@ -308,6 +272,12 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
                       <span className="text-[#3B66F5] hover:underline cursor-pointer">{lead.domain}</span>
                       <span>•</span>
                       <span>{lead.category}</span>
+                      {lead.city && (
+                        <>
+                          <span>•</span>
+                          <span className="text-[#6B7280]">{lead.city}</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -340,8 +310,8 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.94 }}
                     transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-                    onClick={() => onOpenAudit(lead)}
-                    className="px-2.5 py-1 bg-[#252830] hover:bg-[#2E313A] border border-[#2E313A] text-[#9CA3AF] hover:text-white rounded-lg text-xs font-medium transition-colors"
+                    onClick={() => handleOpenAudit(lead)}
+                    className="px-2.5 py-1 bg-[#252830] hover:bg-[#2E313A] border border-[#2E313A] text-[#9CA3AF] hover:text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
                     title="View Full Website Audit"
                   >
                     Audit
@@ -350,8 +320,8 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.94 }}
                     transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-                    onClick={() => onOpenProposal(lead)}
-                    className="flex items-center gap-1 px-3 py-1 bg-[#D2F83D] hover:bg-[#C2E82D] text-[#18191D] rounded-lg text-xs font-bold transition-colors shadow-sm"
+                    onClick={() => handleOpenProposal(lead)}
+                    className="flex items-center gap-1 px-3 py-1 bg-[#D2F83D] hover:bg-[#C2E82D] text-[#18191D] rounded-lg text-xs font-bold transition-colors shadow-sm cursor-pointer"
                   >
                     <span>Proposal</span>
                     <ArrowUpRight className="w-3 h-3" />
@@ -361,19 +331,73 @@ export const LeadRadar: React.FC<LeadRadarProps> = ({ onOpenAudit, onOpenProposa
             );
           })}
 
-          {filteredLeads.length === 0 && (
+          {filteredLeads.length === 0 && !isLoadingLeads && (
             <div className="p-12 text-center text-[#9CA3AF]">
               <Search className="w-8 h-8 mx-auto mb-3 opacity-30" />
               <p className="text-sm font-medium">No leads matching your search criteria</p>
               <button
                 onClick={() => { setSearchQuery(''); setFilter('All'); }}
-                className="mt-3 text-xs text-[#D2F83D] hover:underline"
+                className="mt-3 text-xs text-[#D2F83D] hover:underline cursor-pointer"
               >
                 Clear all filters
               </button>
             </div>
           )}
+
+          {isLoadingLeads && (
+            <div className="p-12 text-center text-[#9CA3AF]">
+              <p className="text-sm font-medium">Loading local business targets...</p>
+            </div>
+          )}
         </div>
+
+        {/* Apple HIG Pagination Footer */}
+        {filteredLeads.length > 0 && (
+          <div className="px-6 py-3 border-t border-[#2E313A] bg-[#1C1D22] flex items-center justify-between text-xs text-[#9CA3AF]">
+            <div>
+              Showing <span className="font-semibold text-white">{startIndex + 1}</span>–
+              <span className="font-semibold text-white">{Math.min(startIndex + pageSize, filteredLeads.length)}</span> of{' '}
+              <span className="font-semibold text-white">{filteredLeads.length.toLocaleString()}</span> targets
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-[#6B7280]">
+                Page {currentSafePage} of {totalPages}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <motion.button
+                  whileHover={{ scale: currentSafePage > 1 ? 1.06 : 1 }}
+                  whileTap={{ scale: currentSafePage > 1 ? 0.94 : 1 }}
+                  disabled={currentSafePage <= 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className={`p-1.5 rounded-lg border flex items-center justify-center transition-colors ${
+                    currentSafePage > 1
+                      ? 'bg-[#252830] hover:bg-[#2E313A] border-[#2E313A] text-white cursor-pointer'
+                      : 'bg-[#18191D]/50 border-[#2E313A]/50 text-[#4B5563] cursor-not-allowed'
+                  }`}
+                  title="Previous Page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: currentSafePage < totalPages ? 1.06 : 1 }}
+                  whileTap={{ scale: currentSafePage < totalPages ? 0.94 : 1 }}
+                  disabled={currentSafePage >= totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className={`p-1.5 rounded-lg border flex items-center justify-center transition-colors ${
+                    currentSafePage < totalPages
+                      ? 'bg-[#252830] hover:bg-[#2E313A] border-[#2E313A] text-white cursor-pointer'
+                      : 'bg-[#18191D]/50 border-[#2E313A]/50 text-[#4B5563] cursor-not-allowed'
+                  }`}
+                  title="Next Page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </motion.button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

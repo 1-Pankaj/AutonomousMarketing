@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, Clock, ArrowRight, ArrowUpRight, Check, ShieldCheck, FileText } from 'lucide-react';
+import { useStudio } from '../context/StudioContext';
 
 interface DailySprintProps {
   onOpenProposal: (leadName: string, domain: string) => void;
@@ -8,8 +9,13 @@ interface DailySprintProps {
 }
 
 export const DailySprint: React.FC<DailySprintProps> = ({ onOpenProposal, onShowToast }) => {
-  const [currentStep, setCurrentStep] = useState<number>(3);
-  const [stepCompleted, setStepCompleted] = useState<boolean[]>([true, true, false, false]);
+  const { sprintState, completeSprintStep, toggleSprintStep, resetSprint } = useStudio();
+  const [currentStep, setCurrentStep] = useState<number>(sprintState.currentStep);
+  const stepCompleted = sprintState.stepCompleted;
+
+  React.useEffect(() => {
+    setCurrentStep(sprintState.currentStep);
+  }, [sprintState.currentStep]);
 
   const steps = [
     {
@@ -41,22 +47,11 @@ export const DailySprint: React.FC<DailySprintProps> = ({ onOpenProposal, onShow
   const isAllCompleted = stepCompleted.every(Boolean);
 
   const handleCompleteCurrentStep = () => {
-    const updated = [...stepCompleted];
-    updated[currentStep - 1] = true;
-    setStepCompleted(updated);
-
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1);
-      onShowToast('Step Completed', `Proceeding to Step ${currentStep + 1}.`, 'info');
-    } else {
-      onShowToast('Sprint Complete!', 'All 4 daily marketing tasks executed in under 15 minutes.', 'success');
-    }
+    completeSprintStep();
   };
 
   const handleToggleStep = (index: number) => {
-    const updated = [...stepCompleted];
-    updated[index] = !updated[index];
-    setStepCompleted(updated);
+    toggleSprintStep(index);
   };
 
   return (
@@ -91,11 +86,11 @@ export const DailySprint: React.FC<DailySprintProps> = ({ onOpenProposal, onShow
             transition={{ type: 'spring', stiffness: 450, damping: 25 }}
             onClick={() => {
               if (isAllCompleted) {
-                setStepCompleted([true, true, false, false]);
-                setCurrentStep(3);
-                onShowToast('Sprint Reset', 'Sprint reset to Step 3.', 'info');
+                resetSprint();
               } else {
-                setStepCompleted([true, true, true, true]);
+                for (let i = 0; i < 4; i++) {
+                  if (!stepCompleted[i]) toggleSprintStep(i);
+                }
                 onShowToast('Sprint Finished!', 'Great job! Today’s marketing is completely done.', 'success');
               }
             }}

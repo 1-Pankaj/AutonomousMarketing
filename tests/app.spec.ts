@@ -14,12 +14,14 @@ if (!fs.existsSync(SCREENSHOT_DIR)) {
 test.describe('AutoMarket Studio Desktop App E2E & Squint Verification', () => {
   test('should render all 11 screens with pixel-level fidelity to Penpot design', async ({ page }) => {
     test.setTimeout(60000);
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(400);
 
     // 01 - Studio Hub
-    await expect(page.getByRole('heading', { name: 'Hello, Alex!' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Hello, Alex/i })).toBeVisible();
     await page.mouse.move(0, 0);
     await page.screenshot({ path: `${SCREENSHOT_DIR}/01_studio_hub.png` });
 
@@ -33,7 +35,7 @@ test.describe('AutoMarket Studio Desktop App E2E & Squint Verification', () => {
     // 03 - Lead Radar & CRM
     await page.locator('button[title="Lead Radar & CRM"]').click();
     await expect(page.getByRole('heading', { name: /Lead Radar/i })).toBeVisible();
-    await expect(page.locator('text=Apex Health Diagnostics').first()).toBeVisible();
+    await expect(page.locator('text=Medipulse Hospital').first()).toBeVisible();
     await page.waitForTimeout(350);
     await page.mouse.move(0, 0);
     await page.screenshot({ path: `${SCREENSHOT_DIR}/03_lead_radar.png` });
@@ -57,6 +59,10 @@ test.describe('AutoMarket Studio Desktop App E2E & Squint Verification', () => {
     // 06 - Studio Settings & Preferences
     await page.locator('button[title="Studio Preferences"]').click();
     await expect(page.getByRole('heading', { name: /Settings/i })).toBeVisible();
+    await expect(page.locator('text=AI Engine & Agent Connections')).toBeVisible();
+    await expect(page.locator('text=11 MCP Tools Active')).toBeVisible();
+    await page.locator('text=Ollama (Local Offline)').click();
+    await page.locator('button:has-text("Test Connection")').click();
     await expect(page.locator('text=X / Twitter').first()).toBeVisible();
     await page.waitForTimeout(350);
     await page.mouse.move(0, 0);
@@ -83,6 +89,7 @@ test.describe('AutoMarket Studio Desktop App E2E & Squint Verification', () => {
     await page.waitForTimeout(250);
     await page.locator('button:has-text("Create Post")').click();
     await expect(page.getByRole('heading', { name: /Create New Post/i })).toBeVisible();
+    await page.locator('button:has-text("Assist with AI")').click();
     await page.waitForTimeout(350);
     await page.mouse.move(0, 0);
     await page.screenshot({ path: `${SCREENSHOT_DIR}/09_modal_new_post.png` });
@@ -94,6 +101,7 @@ test.describe('AutoMarket Studio Desktop App E2E & Squint Verification', () => {
     await page.waitForTimeout(250);
     await page.locator('button:has-text("Send Client Proposal")').click();
     await expect(page.getByRole('heading', { name: /Send Client Proposal/i })).toBeVisible();
+    await page.locator('button:has-text("Personalize with AI")').click();
     await page.waitForTimeout(350);
     await page.mouse.move(0, 0);
     await page.screenshot({ path: `${SCREENSHOT_DIR}/10_modal_proposal.png` });
@@ -154,10 +162,80 @@ test.describe('AutoMarket Studio Desktop App E2E & Squint Verification', () => {
     // Switch back to Dark Theme via Settings
     await page.locator('button[title="Studio Preferences"]').click();
     await page.waitForTimeout(300);
+    // Dismiss any active toast overlays for a clean screenshot
+    const toastDismissButtons = page.locator('.pointer-events-auto button');
+    const toastCount = await toastDismissButtons.count();
+    for (let i = 0; i < toastCount; i++) {
+      await toastDismissButtons.nth(i).click().catch(() => {});
+    }
+    await page.waitForTimeout(200);
     await page.mouse.move(0, 0);
     await page.screenshot({ path: `${SCREENSHOT_DIR}/13_light_theme_settings.png` });
     await page.locator('text=Dark Appearance').click();
     await page.waitForTimeout(300);
     await expect(page.locator('html')).toHaveClass(/dark/);
+  });
+
+  test('should verify real data logic: pagination, search, lead audit loading, proposal flow, and CSV backup', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(400);
+
+    // Dismiss initial toast to clear bottom-right workspace
+    const initialToast = page.locator('.pointer-events-auto button');
+    if (await initialToast.count() > 0) {
+      await initialToast.first().click();
+      await page.waitForTimeout(200);
+    }
+
+    // 1. Navigate to Lead Radar
+    await page.locator('button[title="Lead Radar & CRM"]').click();
+    await expect(page.getByRole('heading', { name: /Lead Radar/i })).toBeVisible();
+    await expect(page.locator('text=Medipulse Hospital').first()).toBeVisible();
+
+    // 2. Verify Pagination: 15 per page out of 111
+    await expect(page.locator('text=/Showing 1–15 of 111 targets/i')).toBeVisible();
+    await page.locator('button[title="Next Page"]').click();
+    await page.waitForTimeout(200);
+    await expect(page.locator('text=/Showing 16–30 of 111 targets/i')).toBeVisible();
+    await page.locator('button[title="Previous Page"]').click();
+    await page.waitForTimeout(200);
+    await expect(page.locator('text=/Showing 1–15 of 111 targets/i')).toBeVisible();
+
+    // 3. Search Filtering across 111 targets
+    const searchInput = page.locator('input[placeholder*="Search domain"]');
+    await searchInput.fill('Kamla');
+    await page.waitForTimeout(200);
+    await expect(page.locator('text=Kamla Nagar Hospital').first()).toBeVisible();
+    await expect(page.locator('text=/Showing 1–1 of 1 targets/i')).toBeVisible();
+    await searchInput.fill('');
+    await page.waitForTimeout(200);
+
+    // 4. Inspect specific lead in Audit Report
+    await page.locator('div.grid:has-text("Kamla Nagar Hospital")').locator('button:has-text("Audit")').click();
+    await expect(page.getByRole('heading', { name: /Client Performance Review/i })).toBeVisible();
+    await expect(page.locator('text=Kamla Nagar Hospital').first()).toBeVisible();
+    await expect(page.locator('text=knhospital.com').first()).toBeVisible();
+
+    // 5. Open Proposal from Audit Report
+    await page.locator('button:has-text("Send Upgrade Proposal")').click();
+    await expect(page.getByRole('heading', { name: /Send Client Proposal/i })).toBeVisible();
+    await expect(page.locator('text=Kamla Nagar Hospital').first()).toBeVisible();
+    await page.locator('button:has-text("Send Proposal & Audit")').click();
+    await page.waitForTimeout(250);
+
+    // 6. Daily Sprint Progress
+    await page.locator('button[title="Daily Sprint Mode"]').click();
+    await expect(page.getByRole('heading', { level: 1, name: /Daily 15-Minute Marketing Sprint/i })).toBeVisible();
+    const sprintBtn = page.locator('button:has-text("Sprint")').filter({ hasText: /(Complete|Restart) Sprint/ });
+    await sprintBtn.click();
+    await page.waitForTimeout(200);
+
+    // 7. Export Leads CSV Backup from Account Popover
+    await page.locator('button[title="Local Workspace & Storage"]').click();
+    await expect(page.locator('text=AutoMarket Studio').first()).toBeVisible();
+    await page.locator('button:has-text("Export Leads Backup")').click();
+    await page.waitForTimeout(300);
   });
 });

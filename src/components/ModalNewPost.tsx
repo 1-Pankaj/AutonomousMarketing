@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Calendar, Image as ImageIcon, Check, ArrowUpRight } from 'lucide-react';
+import { X, Calendar, Image as ImageIcon, Check, ArrowUpRight, Cpu } from 'lucide-react';
 import { QueuedPost } from '../types';
+import { AIProviderId, aiClient, AI_PROVIDERS } from '../services/aiClient';
+import { useStudio } from '../context/StudioContext';
 
 interface ModalNewPostProps {
   isOpen: boolean;
@@ -10,11 +12,14 @@ interface ModalNewPostProps {
 }
 
 export const ModalNewPost: React.FC<ModalNewPostProps> = ({ isOpen, onClose, onSchedulePost }) => {
+  const { settings, showToast } = useStudio();
   const [content, setContent] = useState<string>(
     'How we took a regional clinic booking portal from 5.1s mobile load time down to 0.7s:\n\n1. Replaced unindexed SQL queries with static edge cache\n2. Swapped legacy frontend with Next.js edge routes\n3. Zero downtime migration without touching EHR backend\n\nResult: +180% monthly completed appointments.'
   );
   const [channel, setChannel] = useState<'All' | 'Twitter' | 'Bluesky'>('All');
   const [scheduledTime, setScheduledTime] = useState<string>('09:00 AM Tomorrow');
+  const [selectedAi, setSelectedAi] = useState<AIProviderId>(settings.aiProvider || 'antigravity');
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
 
   // Apple HIG: Close on Escape key
   useEffect(() => {
@@ -29,6 +34,29 @@ export const ModalNewPost: React.FC<ModalNewPostProps> = ({ isOpen, onClose, onS
 
   const charCount = content.length;
   const maxChar = 280;
+
+  const handleGenerateAi = async () => {
+    setIsAiGenerating(true);
+    try {
+      const generated = await aiClient.generateText({
+        prompt: 'Create a plain English, direct case study post about cutting clinic web portal load times down to 0.7s without downtime.',
+        context: `Channel: ${channel}, Writing strictness: ${settings.writingStyle || 95}%`,
+        providerId: selectedAi,
+        endpoint: settings.aiEndpoint,
+        model: settings.aiModel,
+        apiKey: settings.aiApiKey,
+      });
+      if (generated) {
+        setContent(generated);
+        const meta = AI_PROVIDERS.find(p => p.id === selectedAi);
+        showToast('Draft Generated', `Polished case study using ${meta?.name || 'AI'}.`, 'success');
+      }
+    } catch {
+      showToast('AI Notice', 'Unable to complete AI draft; keeping existing copy.', 'info');
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
 
   const handlePublish = () => {
     onSchedulePost({
@@ -122,6 +150,49 @@ export const ModalNewPost: React.FC<ModalNewPostProps> = ({ isOpen, onClose, onS
                 <div className="text-xs text-[#8A8F9E] font-medium">
                   Direct &amp; Natural Tone
                 </div>
+              </div>
+
+              {/* AI Engine Selector for Task */}
+              <div className="flex items-center justify-between p-2.5 bg-[#18191D] border border-[#2E313A] rounded-xl">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-3.5 h-3.5 text-[#3B66F5]" />
+                  <span className="text-xs text-[#9CA3AF] font-medium">Assistant:</span>
+                  {(['antigravity', 'claude', 'ollama', 'openai'] as const).map(p => {
+                    const labels = {
+                      antigravity: 'Antigravity',
+                      claude: 'Claude',
+                      ollama: 'Ollama (Local)',
+                      openai: 'OpenAI',
+                    };
+                    const isSelected = selectedAi === p;
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setSelectedAi(p)}
+                        className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#252830] text-white border border-[#3E424E]'
+                            : 'text-[#8A8F9E] hover:text-white'
+                        }`}
+                      >
+                        {labels[p]}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  disabled={isAiGenerating}
+                  onClick={handleGenerateAi}
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-[#252830] hover:bg-[#2E313A] border border-[#2E313A] text-xs font-bold text-white rounded-lg transition-colors cursor-pointer"
+                >
+                  <Cpu className={`w-3.5 h-3.5 ${isAiGenerating ? 'animate-spin text-[#D2F83D]' : 'text-[#D2F83D]'}`} />
+                  <span>{isAiGenerating ? 'Drafting...' : 'Assist with AI'}</span>
+                </motion.button>
               </div>
 
               {/* Text Editor Box */}

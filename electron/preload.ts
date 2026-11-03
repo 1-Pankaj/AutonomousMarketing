@@ -11,5 +11,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('window-maximized-state', listener);
   },
   getLeads: () => ipcRenderer.invoke('get-leads'),
+  saveLeads: (leads: any[]) => ipcRenderer.invoke('save-leads', leads),
+  getPosts: () => ipcRenderer.invoke('get-posts'),
+  savePosts: (posts: any[]) => ipcRenderer.invoke('save-posts', posts),
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
+  getIntents: () => ipcRenderer.invoke('get-intents'),
+  saveIntents: (intents: any[]) => ipcRenderer.invoke('save-intents', intents),
+  getSprintState: () => ipcRenderer.invoke('get-sprint-state'),
+  saveSprintState: (state: any) => ipcRenderer.invoke('save-sprint-state', state),
+  exportLeadsCSV: () => ipcRenderer.invoke('export-leads-csv'),
 });
-

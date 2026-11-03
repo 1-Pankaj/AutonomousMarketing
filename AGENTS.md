@@ -138,7 +138,7 @@ To maintain model intelligence without context degradation:
 When the user gives the instruction to connect real live data:
 
 1. **Lead Radar & Prospect Store**:
-   - Primary data file: `leads/leads.json` (accessible via `window.electronAPI.getLeads()`).
+   - Primary data file: `leads/leads.json` (git-ignored, strictly private to user's machine; falls back to `leads/leads.example.json` if absent). Accessible via `window.electronAPI.getLeads()`.
    - Schema: `Lead` (`src/types.ts`) (`id`, `name`, `domain`, `category`, `healthScore`, `healthStatus`, `vulnerability`, `monthlyVisitors`, `opportunityValue`).
 2. **Social Stream & Inquiries**:
    - Schema: `SocialIntent` (`src/types.ts`) (`authorName`, `authorHandle`, `platform`, `content`, `matchScore`, `estimatedBudget`).
@@ -146,3 +146,70 @@ When the user gives the instruction to connect real live data:
    - Schema: `QueuedPost` (`src/types.ts`) (`title`, `channel`, `scheduledTime`, `charCount`, `status`, `content`).
 4. **Local-First Storage Guarantee**:
    - All records remain strictly on the user's local disk with zero external tracking or cloud lock-in.
+
+---
+
+## 6. AI Engine Architecture & Model Context Protocol (MCP) Server
+
+AutoMarket Studio features an open, multi-agent AI architecture:
+
+### 6.1 Native MCP Server (`mcp/server.js`)
+- Standard Model Context Protocol (MCP) server running on `stdio` transport.
+- Accessible by **Claude Desktop**, **Cursor IDE**, **Google Antigravity**, **Ollama**, **OpenClaw**, **OpenCode**, and **Codex**.
+- Run command:
+  ```bash
+  npm run mcp
+  ```
+- **11 Native Tools**:
+  1. `list_leads(status, search, limit, offset)` — Query local targets, digital health scores, and flaws.
+  2. `get_lead_audit(leadIdOrDomain)` — Comprehensive performance breakdown, contact details, and revenue friction.
+  3. `update_lead(leadId, status, notes)` — Update prospect CRM status (`New`, `Audited`, `Proposal Sent`, `Closed`).
+  4. `get_content_queue(status)` — List queued case studies and drafts.
+  5. `schedule_post(title, content, channel, scheduledTime, isDraft)` — Add educational posts to the publishing queue.
+  6. `publish_post(postIdOrTitle)` — Publish a queued update and advance Daily Sprint Step 1.
+  7. `get_client_opportunities(minScore)` — List matched buyer signals and pain points.
+  8. `get_daily_sprint()` — Read the 4-step daily marketing sprint status.
+  9. `complete_sprint_step(stepNumber)` — Mark a daily routine step as complete.
+  10. `generate_client_proposal(leadIdOrDomain, packageType)` — Craft tailored, plain English outreach proposals.
+  11. `export_leads_csv()` — Trigger local offline CSV backup to `leads/leads_backup.csv`.
+
+### 6.2 Agent MCP Client Configurations
+- **Claude Desktop** (`claude_desktop_config.json`):
+  ```json
+  {
+    "mcpServers": {
+      "automarket-studio": {
+        "command": "node",
+        "args": ["<project-path>/mcp/server.js"]
+      }
+    }
+  }
+  ```
+- **Cursor IDE** (`.cursor/mcp.json`):
+  ```json
+  {
+    "mcpServers": {
+      "automarket": {
+        "command": "node",
+        "args": ["<project-path>/mcp/server.js"]
+      }
+    }
+  }
+  ```
+- **Google Antigravity** (`mcp_servers.json`):
+  ```json
+  {
+    "mcp_servers": {
+      "automarket": {
+        "command": "node",
+        "args": ["<project-path>/mcp/server.js"]
+      }
+    }
+  }
+  ```
+
+### 6.3 In-App AI Engines (Ollama, Claude, Antigravity, OpenAI)
+- Users can switch their active AI engine in **Studio Preferences** or at the task level (when writing a post or drafting a proposal).
+- **Ollama**: 100% private and offline on `http://localhost:11434` (zero telemetry, zero cloud calls).
+- **Strict Anti-Jargon Guardrail**: All AI generation adheres to plain business English standards, omitting buzzwords and AI sales clichés.
+

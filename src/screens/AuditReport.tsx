@@ -93,9 +93,11 @@ export const AuditReport: React.FC<AuditReportProps> = ({ lead, onBack, onOpenPr
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white tracking-tight">Estimated Monthly Revenue Friction: $14,200</h3>
+              <h3 className="text-sm font-bold text-white tracking-tight">
+                Estimated Opportunity Impact: {targetLead.opportunityValue || '$14,200'}
+              </h3>
               <p className="text-xs text-[#FCA5A5] mt-1 leading-relaxed max-w-2xl">
-                Slow mobile load speeds and tap-target collisions cause over 42% of prospective patients to abandon the appointment booking step on smartphones.
+                {targetLead.vulnerability || 'Slow mobile load speeds and tap-target collisions cause prospective patients to abandon the appointment booking step on smartphones.'}
               </p>
             </div>
           </div>

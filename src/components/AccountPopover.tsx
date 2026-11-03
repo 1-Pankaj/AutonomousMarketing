@@ -8,13 +8,17 @@ interface AccountPopoverProps {
   onClose: () => void;
   onNavigate: (screen: ScreenId) => void;
   onShowToast: (title: string, message: string, type: 'info' | 'success') => void;
+  onExportCSV?: () => void;
+  leadCount?: number;
 }
 
 export const AccountPopover: React.FC<AccountPopoverProps> = ({
   isOpen,
   onClose,
   onNavigate,
-  onShowToast
+  onShowToast,
+  onExportCSV,
+  leadCount = 111
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -60,7 +64,7 @@ export const AccountPopover: React.FC<AccountPopoverProps> = ({
                   <HardDrive className="w-3.5 h-3.5 text-[#3B66F5]" />
                   <span>leads.json</span>
                 </div>
-                <span className="text-[#D2F83D] font-semibold">2,174 Local Targets</span>
+                <span className="text-[#D2F83D] font-semibold">{leadCount.toLocaleString()} Local Targets</span>
               </div>
             </div>
 
@@ -81,10 +85,14 @@ export const AccountPopover: React.FC<AccountPopoverProps> = ({
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => {
-                  onShowToast('Data Exported', 'Local leads backed up to CSV.', 'success');
+                  if (onExportCSV) {
+                    onExportCSV();
+                  } else {
+                    onShowToast('Data Exported', 'Local leads backed up to CSV.', 'success');
+                  }
                   onClose();
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-[#9CA3AF] hover:text-white hover:bg-[#252830] rounded-lg transition-colors text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-[#9CA3AF] hover:text-white hover:bg-[#252830] rounded-lg transition-colors text-left cursor-pointer"
               >
                 <FileSpreadsheet className="w-4 h-4 text-[#8A8F9E]" />
                 <span className="font-medium">Export Leads Backup (CSV)</span>

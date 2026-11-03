@@ -120,8 +120,12 @@ html.light .bg-\[\#15161A\] {
 
 /* Subtle Inset Wells (e.g. editor box, table rows, muted cards) */
 html.light .bg-\[\#18191D\]\/90,
+html.light .bg-\[\#18191D\]\/80,
+html.light .bg-\[\#18191D\]\/70,
 html.light .bg-\[\#18191D\]\/60,
-html.light .bg-\[\#18191D\]\/40 {
+html.light .bg-\[\#18191D\]\/50,
+html.light .bg-\[\#18191D\]\/40,
+html.light .bg-\[\#18191D\]\/30 {
   background-color: #F9FAFB !important;
 }
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, FileText, CheckCircle2, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { X, Send, FileText, CheckCircle2, ShieldCheck, ArrowUpRight, Cpu } from 'lucide-react';
 import { Lead } from '../types';
+import { useStudio } from '../context/StudioContext';
+import { AIProviderId, aiClient } from '../services/aiClient';
 
 interface ModalSendProposalProps {
   isOpen: boolean;
@@ -11,17 +13,37 @@ interface ModalSendProposalProps {
 }
 
 export const ModalSendProposal: React.FC<ModalSendProposalProps> = ({ isOpen, onClose, lead, onSend }) => {
+  const { settings, showToast } = useStudio();
   const [selectedTier, setSelectedTier] = useState<'sprint' | 'overhaul'>('sprint');
+  const [selectedAi, setSelectedAi] = useState<AIProviderId>(settings.aiProvider || 'antigravity');
+  const [isAiPersonalizing, setIsAiPersonalizing] = useState(false);
   const targetLead = lead || {
+    id: 'lead-default',
     name: 'Dr. Elena Rostova',
     domain: 'meridianclinics.org',
     category: 'Healthcare Clinic',
+    healthScore: 32,
+    healthStatus: 'Critical' as const,
+    vulnerability: 'Mobile portal latency and booking calendar drop-offs',
     opportunityValue: '$8,500'
   };
 
   const [emailText, setEmailText] = useState(
     `Hi Dr. Rostova,\n\nAttached is the 2-page modernization audit we prepared for ${targetLead.name} regarding your 5.1s mobile portal load times.\n\nOur 14-day sprint migrates your appointment calendar to a modern edge frontend, dropping load time to under 0.8s without touching your existing patient records database.\n\nWould you be open to a 10-minute walkthrough this Thursday?`
   );
+
+  // Sync draft message whenever active lead changes
+  useEffect(() => {
+    if (lead) {
+      const contact = lead.contactPerson ? `Hi ${lead.contactPerson},\n\n` : `Hi ${lead.name} Team,\n\n`;
+      const issue = lead.vulnerability
+        ? `regarding ${lead.vulnerability.toLowerCase()}`
+        : `regarding website speed and mobile usability improvements`;
+      setEmailText(
+        `${contact}Attached is the 2-page modernization review we prepared for ${lead.name} (${lead.domain}) ${issue}.\n\nOur 14-day sprint migrates your core user flow to a modern, responsive edge architecture, cutting load times without touching your existing databases or operations.\n\nWould you be open to a 10-minute walkthrough this week?`
+      );
+    }
+  }, [lead]);
 
   // Apple HIG: Close on Escape key
   useEffect(() => {
@@ -33,6 +55,28 @@ export const ModalSendProposal: React.FC<ModalSendProposalProps> = ({ isOpen, on
     }
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
+
+  const handlePersonalizeAi = async () => {
+    setIsAiPersonalizing(true);
+    try {
+      const generated = await aiClient.generateText({
+        prompt: `Personalize a direct, respectful outreach proposal to ${targetLead.name} (${targetLead.domain}) addressing their ${targetLead.vulnerability || 'mobile latency and checkout bottlenecks'}. Package: ${selectedTier === 'sprint' ? '14-Day Sprint' : 'Full Overhaul'}.`,
+        context: `Recipient: ${targetLead.name}, Domain: ${targetLead.domain}`,
+        providerId: selectedAi,
+        endpoint: settings.aiEndpoint,
+        model: settings.aiModel,
+        apiKey: settings.aiApiKey,
+      });
+      if (generated) {
+        setEmailText(generated);
+        showToast('Proposal Personalized', `Generated custom scope using selected AI assistant.`, 'success');
+      }
+    } catch {
+      showToast('AI Notice', 'Proposal remains ready in default template.', 'info');
+    } finally {
+      setIsAiPersonalizing(false);
+    }
+  };
 
   const handleSubmit = () => {
     onSend({
@@ -136,9 +180,49 @@ export const ModalSendProposal: React.FC<ModalSendProposalProps> = ({ isOpen, on
 
               {/* Email Body Preview */}
               <div>
-                <label className="text-xs font-bold text-[#9CA3AF] uppercase tracking-wider block mb-2">
-                  Proposal Message (Plain Business English)
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-[#9CA3AF] uppercase tracking-wider">
+                    Proposal Message (Plain Business English)
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[#8A8F9E]">AI:</span>
+                    {(['antigravity', 'claude', 'ollama', 'openai'] as const).map(p => {
+                      const labels = {
+                        antigravity: 'Antigravity',
+                        claude: 'Claude',
+                        ollama: 'Ollama',
+                        openai: 'OpenAI',
+                      };
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setSelectedAi(p)}
+                          className={`px-2 py-0.5 rounded text-xs font-semibold transition-colors cursor-pointer ${
+                            selectedAi === p
+                              ? 'bg-[#252830] text-white border border-[#3E424E]'
+                              : 'text-[#8A8F9E] hover:text-white'
+                          }`}
+                        >
+                          {labels[p]}
+                        </button>
+                      );
+                    })}
+
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.95 }}
+                      type="button"
+                      disabled={isAiPersonalizing}
+                      onClick={handlePersonalizeAi}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-[#252830] hover:bg-[#2E313A] border border-[#2E313A] text-xs font-bold text-white rounded-lg transition-colors cursor-pointer ml-1"
+                    >
+                      <Cpu className={`w-3.5 h-3.5 ${isAiPersonalizing ? 'animate-spin text-[#3B66F5]' : 'text-[#60A5FA]'}`} />
+                      <span>{isAiPersonalizing ? 'Personalizing...' : 'Personalize with AI'}</span>
+                    </motion.button>
+                  </div>
+                </div>
                 <textarea
                   rows={5}
                   value={emailText}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, Copy, Check, ArrowUpRight, Briefcase, ShieldCheck, Search, X } from 'lucide-react';
 import { SocialIntent } from '../types';
+import { useStudio } from '../context/StudioContext';
 
 interface ClientOpportunitiesProps {
   onOpenProposal: (leadName: string, domain: string) => void;
@@ -64,12 +65,14 @@ const INTENT_STREAMS: SocialIntent[] = [
 ];
 
 export const ClientOpportunities: React.FC<ClientOpportunitiesProps> = ({ onOpenProposal, onShowToast }) => {
+  const { intents } = useStudio();
+  const intentList = intents.length > 0 ? intents : INTENT_STREAMS;
   const [selectedIntentId, setSelectedIntentId] = useState<string>('intent-1');
   const [copied, setCopied] = useState(false);
   const [filter, setFilter] = useState<'All' | 'High' | 'Healthcare' | 'Ecommerce'>('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredIntents = INTENT_STREAMS.filter(item => {
+  const filteredIntents = intentList.filter(item => {
     const matchesFilter =
       filter === 'All' ? true :
       filter === 'High' ? item.matchScore >= 95 :
@@ -91,7 +94,7 @@ export const ClientOpportunities: React.FC<ClientOpportunitiesProps> = ({ onOpen
     filteredIntents[0] ||
     INTENT_STREAMS[0];
 
-  const getPitchContent = (intent: SocialIntent) => {
+  const getMessageContent = (intent: SocialIntent) => {
     if (intent.id === 'intent-1') {
       return {
         p1: `Hi Dr. Rostova, noticed your note about the patient portal load delays. In healthcare practices, mobile latency usually stems from un-cached database locks during appointment slot queries.`,
@@ -113,10 +116,10 @@ export const ClientOpportunities: React.FC<ClientOpportunitiesProps> = ({ onOpen
     }
   };
 
-  const pitch = getPitchContent(selectedIntent);
+  const message = getMessageContent(selectedIntent);
 
-  const handleCopyPitch = () => {
-    const fullText = `${pitch.p1}\n\n${pitch.p2}\n\n${pitch.p3}`;
+  const handleCopyMessage = () => {
+    const fullText = `${message.p1}\n\n${message.p2}\n\n${message.p3}`;
     navigator.clipboard.writeText(fullText);
     setCopied(true);
     onShowToast('Message Copied', 'Suggested message ready to paste.', 'success');
@@ -259,7 +262,7 @@ export const ClientOpportunities: React.FC<ClientOpportunitiesProps> = ({ onOpen
           )}
         </div>
 
-        {/* Right Column: Matched Pitch & Case Study Proof (7 cols) */}
+        {/* Right Column: Matched Message & Case Study Proof (7 cols) */}
         <div className="col-span-7 flex flex-col gap-4 overflow-y-auto">
           {/* Top: Relevant Case Study Proof */}
           <div className="bg-[#202227] border border-[#2E313A] rounded-xl p-4 hover:border-[#3E424E] transition-colors">
@@ -343,7 +346,7 @@ export const ClientOpportunities: React.FC<ClientOpportunitiesProps> = ({ onOpen
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.94 }}
                     transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-                    onClick={handleCopyPitch}
+                    onClick={handleCopyMessage}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#18191D] hover:bg-[#252830] border border-[#2E313A] text-xs font-medium text-white transition-colors cursor-pointer"
                   >
                     {copied ? <Check className="w-3.5 h-3.5 text-[#D2F83D]" /> : <Copy className="w-3.5 h-3.5 text-[#9CA3AF]" />}
@@ -352,7 +355,7 @@ export const ClientOpportunities: React.FC<ClientOpportunitiesProps> = ({ onOpen
                 </div>
               </div>
 
-              {/* Pitch Body with smooth AnimatePresence */}
+              {/* Message Body with smooth AnimatePresence */}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={selectedIntent.id}
@@ -362,9 +365,9 @@ export const ClientOpportunities: React.FC<ClientOpportunitiesProps> = ({ onOpen
                   transition={{ duration: 0.2 }}
                   className="space-y-3.5 bg-[#18191D] border border-[#2E313A] rounded-xl p-4 text-sm text-[#E5E7EB] leading-relaxed"
                 >
-                  <p className="font-normal">{pitch.p1}</p>
-                  <p className="font-normal text-[#D1D5DB]">{pitch.p2}</p>
-                  <p className="font-normal text-[#9CA3AF] italic">{pitch.p3}</p>
+                  <p className="font-normal">{message.p1}</p>
+                  <p className="font-normal text-[#D1D5DB]">{message.p2}</p>
+                  <p className="font-normal text-[#9CA3AF] italic">{message.p3}</p>
                 </motion.div>
               </AnimatePresence>
             </div>

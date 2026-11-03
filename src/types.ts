@@ -25,6 +25,11 @@ export interface Lead {
   vulnerability: string;
   monthlyVisitors?: string;
   opportunityValue?: string;
+  city?: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  status?: 'New' | 'Audited' | 'Proposal Sent' | 'Closed';
 }
 
 export interface QueuedPost {
@@ -76,4 +81,51 @@ export interface StudioConfig {
   dailyRoutineEnabled: boolean;
   desktopNotifications: boolean;
   soundAlerts: boolean;
+  theme?: 'dark' | 'light';
+  aiProvider?: 'antigravity' | 'claude' | 'ollama' | 'openai' | 'openclaw' | 'cursor';
+  aiApiKey?: string;
+  aiEndpoint?: string;
+  aiModel?: string;
 }
+
+export interface SprintState {
+  currentStep: number;
+  stepCompleted: boolean[];
+  lastUpdated?: string;
+}
+
+export interface ClientProposalRecord {
+  id: string;
+  leadId?: string;
+  recipient: string;
+  domain?: string;
+  packageType: string;
+  amount: string;
+  sentAt: string;
+}
+
+export interface ElectronAPI {
+  minimize: () => void;
+  maximize: () => void;
+  close: () => void;
+  isMaximized: () => Promise<boolean>;
+  onMaximizedState: (callback: (isMaximized: boolean) => void) => () => void;
+  getLeads: () => Promise<any[]>;
+  saveLeads: (leads: any[]) => Promise<boolean>;
+  getPosts: () => Promise<QueuedPost[]>;
+  savePosts: (posts: QueuedPost[]) => Promise<boolean>;
+  getSettings: () => Promise<Partial<StudioConfig>>;
+  saveSettings: (settings: Partial<StudioConfig>) => Promise<boolean>;
+  getIntents: () => Promise<SocialIntent[]>;
+  saveIntents: (intents: SocialIntent[]) => Promise<boolean>;
+  getSprintState: () => Promise<SprintState>;
+  saveSprintState: (state: SprintState) => Promise<boolean>;
+  exportLeadsCSV: () => Promise<{ success: boolean; filePath?: string; count?: number }>;
+}
+
+declare global {
+  interface Window {
+    electronAPI?: ElectronAPI;
+  }
+}
+

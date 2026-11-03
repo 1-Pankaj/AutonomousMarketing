@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, ArrowUpRight, MessageCircle, Repeat2, Heart, Check, Send, X, FileText } from 'lucide-react';
 import { QueuedPost } from '../types';
+import { useStudio } from '../context/StudioContext';
 
 interface ContentStudioProps {
-  onPublishPost: (postTitle: string) => void;
-  onOpenNewPost: () => void;
+  onPublishPost?: (postTitle: string) => void;
+  onOpenNewPost?: () => void;
   posts?: QueuedPost[];
 }
 
@@ -57,10 +58,15 @@ const DEFAULT_POSTS: QueuedPost[] = [
 ];
 
 export const ContentStudio: React.FC<ContentStudioProps> = ({
-  onPublishPost,
-  onOpenNewPost,
-  posts = DEFAULT_POSTS,
+  onPublishPost: propPublishPost,
+  onOpenNewPost: propOpenNewPost,
+  posts: propPosts,
 }) => {
+  const { posts: ctxPosts, publishPost: ctxPublishPost, setIsNewPostOpen } = useStudio();
+  const posts = (propPosts && propPosts.length > 0) ? propPosts : ctxPosts;
+  const onPublishPost = propPublishPost || ctxPublishPost;
+  const onOpenNewPost = propOpenNewPost || (() => setIsNewPostOpen(true));
+
   const [filter, setFilter] = useState<'all' | 'social' | 'direct'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeChannelTab, setActiveChannelTab] = useState<'bluesky' | 'twitter' | 'linkedin' | 'blog'>('bluesky');
