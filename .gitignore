@@ -1,0 +1,88 @@
+# Dependencies & Package Managers
+node_modules/
+.pnp
+.pnp.js
+
+# Production & Electron Builds
+dist/
+dist-electron/
+release/
+out/
+build/
+*.exe
+*.dmg
+*.app
+*.deb
+*.rpm
+*.zip
+*.tar.gz
+
+# Playwright & Testing Artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+coverage/
+screenshots/
+
+# Vite Cache & Temp Files
+.vite/
+*.tsbuildinfo
+
+# Local Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+
+# Private / Internal Spreadsheets & Data Exports
+*.xlsx
+*.xls
+leads/*.xlsx
+leads/*.xls
+leads/backup_*.csv
+leads/*.csv
+
+# AI Tooling & Local Assistant Caches
+.claude/
+agent/
+graphify-out/
+figma-plugin/
+
+# External / Sibling Directories in Workspace
+1-pankaj.github.io/
+codeloomtechnologies-next/
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE & Editor Configurations
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.sublime-workspace
+*.sublime-project
+*.backup
+
+# Debug Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*

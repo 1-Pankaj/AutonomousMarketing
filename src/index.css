@@ -1,0 +1,376 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #18191D;
+  color: #FFFFFF;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  user-select: none;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2E313A;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3E424E;
+}
+
+.app-drag {
+  -webkit-app-region: drag;
+}
+
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* ==========================================================================
+   Apple Human Interface Guidelines — Light Appearance
+   ========================================================================== */
+html.light {
+  color-scheme: light;
+}
+
+html.light body {
+  background-color: #F5F6F8;
+  color: #111827;
+}
+
+/* Scrollbars in Light Mode */
+html.light ::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* Canvas, Screens & TitleBar */
+html.light .bg-\[\#18191D\] {
+  background-color: #F5F6F8 !important;
+}
+
+/* Primary Cards, Modals, Popovers */
+html.light .bg-\[\#202227\],
+html.light .bg-\[\#202227\]\/95,
+html.light .bg-\[\#202227\]\/98 {
+  background-color: #FFFFFF !important;
+}
+
+/* Dock & Aside Container */
+html.light aside,
+html.light .bg-\[\#1C1D22\],
+html.light .bg-\[\#1C1D22\]\/95,
+html.light .bg-\[\#1C1D22\]\/80 {
+  background-color: #FFFFFF !important;
+  border-color: #E2E4E9 !important;
+}
+
+html.light .dock-logo-btn {
+  background-color: #F0F2F5 !important;
+  border-color: #E2E4E9 !important;
+}
+
+html.light .dock-nav-item:not(.text-\[\#18191D\]) {
+  color: #64748B !important;
+}
+
+html.light .dock-nav-item:not(.text-\[\#18191D\]):hover {
+  background-color: #F0F2F5 !important;
+  color: #111827 !important;
+}
+
+html.light .dock-tooltip {
+  background-color: #1F2937 !important;
+  color: #FFFFFF !important;
+  border-color: #374151 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15) !important;
+}
+
+html.light .ring-\[\#1C1D22\] {
+  --tw-ring-color: #FFFFFF !important;
+}
+
+/* Secondary Panels, Hover states, Input containers, Inner wells */
+html.light .bg-\[\#252830\],
+html.light .bg-\[\#22242A\],
+html.light .bg-\[\#25272F\],
+html.light .bg-\[\#15161A\] {
+  background-color: #F0F2F5 !important;
+}
+
+/* Subtle Inset Wells (e.g. editor box, table rows, muted cards) */
+html.light .bg-\[\#18191D\]\/90,
+html.light .bg-\[\#18191D\]\/60,
+html.light .bg-\[\#18191D\]\/40 {
+  background-color: #F9FAFB !important;
+}
+
+/* Filter Pills & Secondary Control Pills */
+html.light .bg-\[\#2A2D35\] {
+  background-color: #F0F2F5 !important;
+  border: 1px solid #E2E4E9 !important;
+  color: #64748B !important;
+}
+
+html.light .bg-\[\#2A2D35\]:hover {
+  background-color: #E5E7EB !important;
+  color: #111827 !important;
+}
+
+/* Status Badges & Health Metric Indicators */
+/* 1. Critical (Red) */
+html.light .bg-\[\#2A1618\],
+html.light .bg-\[\#7F1D1D\]\/40 {
+  background-color: #FEF2F2 !important;
+  border-color: #FECACA !important;
+  color: #DC2626 !important;
+}
+
+/* 2. Moderate (Amber/Gold) */
+html.light .bg-\[\#2B2114\],
+html.light .bg-\[\#78350F\]\/40 {
+  background-color: #FFFBEB !important;
+  border-color: #FDE68A !important;
+  color: #D97706 !important;
+}
+
+/* 3. Fair (Emerald) */
+html.light .bg-\[\#14261C\],
+html.light .bg-\[\#065F46\]\/40 {
+  background-color: #F0FDF4 !important;
+  border-color: #BBF7D0 !important;
+  color: #16A34A !important;
+}
+
+/* 4. Healthy (Blue) */
+html.light .bg-\[\#13233A\],
+html.light .bg-\[\#1E3A8A\]\/40 {
+  background-color: #EFF6FF !important;
+  border-color: #BFDBFE !important;
+  color: #2563EB !important;
+}
+
+/* Table Header Row */
+html.light .grid.bg-\[\#1C1D22\] {
+  background-color: #F8FAFC !important;
+  border-color: #E2E4E9 !important;
+  color: #64748B !important;
+}
+
+/* Table Progress Meters */
+html.light .w-24.bg-\[\#18191D\] {
+  background-color: #E2E4E9 !important;
+  border-color: #D1D5DB !important;
+}
+
+/* Table Row Hover */
+html.light .divide-y > div:hover {
+  background-color: #F8FAFC !important;
+}
+
+/* Toggle Switches when Off */
+html.light button.bg-\[\#2E313A\] {
+  background-color: #E2E4E9 !important;
+}
+
+/* Borders */
+html.light .border-\[\#2E313A\],
+html.light .border-\[\#23252B\],
+html.light .border-\[\#3E424E\],
+html.light .border-\[\#3A3D46\],
+html.light .border-\[\#3B404E\],
+html.light .border-\[\#2E313A\]\/60,
+html.light .border-\[\#2E313A\]\/50 {
+  border-color: #E2E4E9 !important;
+}
+
+/* Text Colors */
+html.light .text-white {
+  color: #111827 !important;
+}
+
+html.light .text-\[\#E5E7EB\],
+html.light .text-\[\#D1D5DB\] {
+  color: #374151 !important;
+}
+
+html.light .text-\[\#9CA3AF\],
+html.light .text-\[\#8A8F9E\] {
+  color: #64748B !important;
+}
+
+html.light .text-\[\#6B7280\],
+html.light .text-\[\#656A78\] {
+  color: #94A3B8 !important;
+}
+
+/* Health Badge Text Overrides */
+html.light .text-\[\#F87171\] {
+  color: #DC2626 !important;
+}
+html.light .text-\[\#FCA5A5\] {
+  color: #991B1B !important;
+}
+html.light .text-\[\#FBBF24\] {
+  color: #D97706 !important;
+}
+html.light .text-\[\#34D399\] {
+  color: #16A34A !important;
+}
+html.light .text-\[\#60A5FA\] {
+  color: #2563EB !important;
+}
+
+/* Preserve White Text on Dark / Vibrant Accent Buttons & Tooltips */
+html.light .bg-\[\#3B66F5\],
+html.light .bg-\[\#3B66F5\] *,
+html.light .bg-\[\#2B4EC8\],
+html.light .bg-\[\#2B4EC8\] *,
+html.light .bg-\[\#2546B8\],
+html.light .bg-\[\#2546B8\] *,
+html.light .bg-\[\#EF4444\],
+html.light .bg-\[\#EF4444\] *,
+html.light .bg-\[\#DC2626\],
+html.light .bg-\[\#DC2626\] *,
+html.light .bg-\[\#1F2937\],
+html.light .bg-\[\#1F2937\] *,
+html.light .dock-tooltip,
+html.light .dock-tooltip * {
+  color: #FFFFFF !important;
+}
+
+/* Lime Buttons & Active Badges retain dark text */
+html.light .bg-\[\#D2F83D\],
+html.light .bg-\[\#D2F83D\] * {
+  color: #18191D !important;
+}
+
+/* Content Schedule Calendar in Light Mode */
+html.light .schedule-calendar-card {
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E4E9 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.02) !important;
+}
+html.light .schedule-calendar-card h3,
+html.light .schedule-calendar-card h3 span {
+  color: #111827 !important;
+}
+html.light .schedule-calendar-card .calendar-month-btn {
+  background-color: #F0F2F5 !important;
+  color: #111827 !important;
+  border: 1px solid #E2E4E9 !important;
+}
+html.light .schedule-calendar-card .calendar-month-btn span,
+html.light .schedule-calendar-card .calendar-month-btn svg {
+  color: #111827 !important;
+}
+html.light .schedule-calendar-card .calendar-month-btn:hover {
+  background-color: #E5E7EB !important;
+}
+html.light .schedule-calendar-card .calendar-week-header,
+html.light .schedule-calendar-card .calendar-week-header div {
+  color: #64748B !important;
+}
+html.light .schedule-calendar-card .calendar-day-normal {
+  background-color: #F8FAFC !important;
+  color: #1E293B !important;
+  border: 1px solid #E2E4E9 !important;
+}
+html.light .schedule-calendar-card .calendar-day-normal:hover {
+  background-color: #EEF2F6 !important;
+  color: #0F172A !important;
+}
+html.light .schedule-calendar-card .calendar-day-muted {
+  border-color: #E2E4E9 !important;
+  color: #94A3B8 !important;
+}
+html.light .schedule-calendar-card .calendar-day-selected {
+  background-color: #3B66F5 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(59, 102, 245, 0.35) !important;
+  --tw-ring-color: rgba(59, 102, 245, 0.3) !important;
+}
+
+/* Dark Theme Preview inside Settings */
+html.light .dark-preview-box {
+  background-color: #18191D !important;
+  border-color: #2E313A !important;
+}
+html.light .dark-preview-item {
+  background-color: #202227 !important;
+  border-color: #2E313A !important;
+}
+
+/* SVG Fill & Stroke in Light Mode */
+html.light svg.fill-white,
+html.light .fill-white {
+  fill: #111827 !important;
+}
+
+html.light [stroke="#2A2D35"] {
+  stroke: #E2E4E9 !important;
+}
+
+html.light [stroke="#2E313A"] {
+  stroke: #E2E4E9 !important;
+}
+
+/* Input Fields in Light Mode */
+html.light input,
+html.light textarea {
+  color: #111827 !important;
+}
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+/* Time Input in Light Mode */
+html.light input[type="time"] {
+  background-color: #F0F2F5 !important;
+  color: #111827 !important;
+  border-color: #E2E4E9 !important;
+}
+
+/* TitleBar Controls in Light Mode */
+html.light .app-no-drag button:hover {
+  background-color: #E5E7EB !important;
+  color: #111827 !important;
+}
+html.light .app-no-drag button.hover\:bg-\[\#FF5C5C\]:hover {
+  background-color: #EF4444 !important;
+  color: #FFFFFF !important;
+}
+
+/* Modal and Popover Apple Shadows in Light Mode */
+html.light .bg-\[\#202227\]\/95,
+html.light .bg-\[\#202227\]\/98,
+html.light .shadow-2xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Glass Material Saturation in Light Mode */
+html.light .backdrop-blur-2xl,
+html.light .backdrop-blur-xl {
+  backdrop-filter: blur(24px) saturate(180%) !important;
+}
