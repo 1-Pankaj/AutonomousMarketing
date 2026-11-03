@@ -56,8 +56,8 @@ Our interface adheres to Apple Human Interface Guidelines for desktop apps:
 
 ### 3.1 Setup
 ```bash
-git clone https://github.com/1-pankaj/AutoMarketStudio.git
-cd AutoMarketStudio
+git clone https://github.com/1-Pankaj/AutonomousMarketing.git
+cd AutonomousMarketing
 npm install
 npm run dev
 ```

@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" shape-rendering="geometricPrecision">
+  <defs>
+    <!-- macOS Ambient Contact Shadow -->
+    <filter id="masterAppShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000000" flood-opacity="0.55"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+
+    <!-- Master Obsidian Ceramic Squircle -->
+    <linearGradient id="obsidianGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#262832"/>
+      <stop offset="35%" stop-color="#181920"/>
+      <stop offset="100%" stop-color="#0F1014"/>
+    </linearGradient>
+
+    <!-- 1px Top-Rim Specular Bevel -->
+    <linearGradient id="rimSpecular" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.32"/>
+      <stop offset="12%" stop-color="#FFFFFF" stop-opacity="0.08"/>
+      <stop offset="85%" stop-color="#000000" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.75"/>
+    </linearGradient>
+
+    <!-- Subtle Diagonal Studio Keylight Sheen -->
+    <linearGradient id="keylightSheen" x1="15%" y1="0%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.09"/>
+      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.02"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Tactile Physical Tile Shadow (Razor-sharp, 0 color blur) -->
+    <filter id="tilePhysicalShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.5"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+
+    <!-- Saturated Tile Materials -->
+    <!-- Top-Left: Pure Crisp Architectural Porcelain -->
+    <linearGradient id="porcelainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E2E7EF"/>
+    </linearGradient>
+    <linearGradient id="porcelainBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#B8C0CC" stop-opacity="0.5"/>
+    </linearGradient>
+
+    <!-- Top-Right: High-Energy Electric Lime (#D2F83D) -->
+    <linearGradient id="electricLimeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E5FF54"/>
+      <stop offset="100%" stop-color="#B5DE10"/>
+    </linearGradient>
+    <linearGradient id="limeBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#7EA403" stop-opacity="0.6"/>
+    </linearGradient>
+
+    <!-- Bottom-Left: Vibrant Royal Cobalt Blue (#3B66F5) -->
+    <linearGradient id="royalCobaltGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4F7EFF"/>
+      <stop offset="100%" stop-color="#244EE3"/>
+    </linearGradient>
+    <linearGradient id="cobaltBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#1434B8" stop-opacity="0.7"/>
+    </linearGradient>
+
+    <!-- Bottom-Right: Pure Silver Daylight -->
+    <linearGradient id="silverDaylightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#DCE2EC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 1. Master Squircle Tile (macOS 424x424 rounded at 98px) -->
+  <g filter="url(#masterAppShadow)">
+    <rect x="44" y="44" width="424" height="424" rx="98" fill="url(#obsidianGlass)"/>
+    <rect x="44" y="44" width="424" height="424" rx="98" fill="url(#keylightSheen)"/>
+    <rect x="44.5" y="44.5" width="423" height="423" rx="97.5" fill="none" stroke="url(#rimSpecular)" stroke-width="1.5"/>
+  </g>
+
+  <!-- 2. Precision Technical Radar Aperture (Swiss Watchmaking / Camera Reticle) -->
+  <g opacity="0.7">
+    <!-- Outer Horizon Ring -->
+    <circle cx="256" cy="256" r="166" fill="none" stroke="#2B2F3D" stroke-width="1.2"/>
+    
+    <!-- Fine Dashed Mid-Orbit (Lead Discovery Range) -->
+    <circle cx="256" cy="256" r="138" fill="none" stroke="#363A4C" stroke-width="1" stroke-dasharray="4 6"/>
+    
+    <!-- Inner Focal Ring -->
+    <circle cx="256" cy="256" r="110" fill="none" stroke="#282C38" stroke-width="1.2"/>
+
+    <!-- 4 Cardinal Alignment Indices -->
+    <line x1="256" y1="80" x2="256" y2="94" stroke="#52586D" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="256" y1="418" x2="256" y2="432" stroke="#52586D" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="80" y1="256" x2="94" y2="256" stroke="#52586D" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="418" y1="256" x2="432" y2="256" stroke="#52586D" stroke-width="1.5" stroke-linecap="round"/>
+
+    <!-- 4 Diagonal Micro-Ticks -->
+    <circle cx="158" cy="158" r="2" fill="#454A5C"/>
+    <circle cx="354" cy="158" r="2" fill="#454A5C"/>
+    <circle cx="158" cy="354" r="2" fill="#454A5C"/>
+    <circle cx="354" cy="354" r="2" fill="#454A5C"/>
+  </g>
+
+  <!-- 3. Master 4-Quadrant Precision Grid (86x86px tiles, 18px gap, centered) -->
+  <g filter="url(#tilePhysicalShadow)">
+    <!-- Top-Left: Pure White Tile -->
+    <rect x="163" y="163" width="86" height="86" rx="24" fill="url(#porcelainGrad)"/>
+    <rect x="163.5" y="163.5" width="85" height="85" rx="23.5" fill="none" stroke="url(#porcelainBevel)" stroke-width="1.2"/>
+
+    <!-- Top-Right: Electric Lime Tile -->
+    <rect x="263" y="163" width="86" height="86" rx="24" fill="url(#electricLimeGrad)"/>
+    <rect x="263.5" y="163.5" width="85" height="85" rx="23.5" fill="none" stroke="url(#limeBevel)" stroke-width="1.2"/>
+
+    <!-- Bottom-Left: Vibrant Cobalt Tile -->
+    <rect x="163" y="263" width="86" height="86" rx="24" fill="url(#royalCobaltGrad)"/>
+    <rect x="163.5" y="263.5" width="85" height="85" rx="23.5" fill="none" stroke="url(#cobaltBevel)" stroke-width="1.2"/>
+
+    <!-- Bottom-Right: Silver Daylight Tile -->
+    <rect x="263" y="263" width="86" height="86" rx="24" fill="url(#silverDaylightGrad)"/>
+    <rect x="263.5" y="263.5" width="85" height="85" rx="23.5" fill="none" stroke="url(#porcelainBevel)" stroke-width="1.2"/>
+  </g>
+</svg>
